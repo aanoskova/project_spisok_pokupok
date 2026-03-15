@@ -1,0 +1,130 @@
+#define _CRT_SECURE_NO_WARNINGS
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+
+#define MAX_ITEMS 100
+#define MAX_NAME 50
+
+// Глобальные переменные
+char items[MAX_ITEMS][MAX_NAME];
+int count = 0;
+
+// Функция чтения из файла
+void readFromFile() {
+    FILE* file = fopen("list.txt", "r");
+    if (!file) {
+        printf("Ошибка открытия файла!\n");
+        getchar();
+        return;
+    }
+
+    count = 0;
+    while (fgets(items[count], MAX_NAME, file) && count < MAX_ITEMS) {
+        // Убираем символ новой строки
+        items[count][strlen(items[count]) - 1] = '\0';
+        count++;
+    }
+    fclose(file);
+    printf("Список успешно загружен\n");
+    getchar();
+}
+
+// Функция сортировки
+void sortItems() {
+    char temp[MAX_NAME];
+    for (int i = 0; i < count - 1; i++) {
+        for (int j = 0; j < count - i - 1; j++) {
+            if (strcmp(items[j], items[j + 1]) > 0) {
+                strcpy(temp, items[j]);
+                strcpy(items[j], items[j + 1]);
+                strcpy(items[j + 1], temp);
+            }
+        }
+    }
+    printf("Список отсортирован\n");
+    getchar();
+}
+
+// Функция записи в файл
+void writeToFile() {
+    FILE* file = fopen("list.txt", "w");
+    if (!file) {
+        printf("Ошибка создания файла!\n");
+        return;
+    }
+
+    for (int i = 0; i < count; i++) {
+        fprintf(file, "%s\n", items[i]);
+    }
+    fclose(file);
+    printf("Список сохранен\n");
+    getchar();
+}
+
+// Функция добавления элемента
+void addItem() {
+    if (count >= MAX_ITEMS) {
+        printf("Список заполнен\n");
+        return;
+    }
+
+    printf("Введите название продукта: ");
+    scanf("%49s", items[count]);  // Ограничение для безопасности
+    count++;
+    printf("Продукт добавлен\n");
+    getchar();
+}
+
+// Функция отображения списка
+void showList() {
+    if (count == 0) {
+        printf("Список пуст\n");
+        getchar();
+        return;
+    }
+
+    printf("\nВаш список покупок:\n");
+    for (int i = 0; i < count; i++) {
+        printf("%d. %s\n", i + 1, items[i]);
+    }
+    getchar();
+}
+
+// Основное меню программы
+int main() {
+    int choice;
+
+    system("chcp 1251 > nul");
+
+    do {
+        system("cls");  // Очистка экрана
+        printf("\nМеню программы:\n");
+        printf("1. Загрузить список\n");
+        printf("2. Добавить продукт\n");
+        printf("3. Показать список\n");
+        printf("4. Отсортировать список\n");
+        printf("5. Сохранить список\n");
+        printf("6. Выход\n");
+
+        printf("Выберите действие: ");
+        scanf("%d", &choice);
+
+        switch (choice) {
+        case 1: readFromFile(); break;
+        case 2: addItem(); break;
+        case 3: showList(); break;
+        case 4: sortItems(); break;
+        case 5: writeToFile(); break;
+        case 6: printf("До свидания!\n"); break;
+        default: printf("Неверный выбор\n");
+        }
+
+        printf("\nНажмите Enter для продолжения...");
+        getchar();
+
+    } while (choice != 6);
+
+    return 0;
+}
