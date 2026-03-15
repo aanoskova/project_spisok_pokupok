@@ -1,0 +1,206 @@
+#define _CRT_SECURE_NO_WARNINGS
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define MAX_ITEMS 100
+#define MAX_NAME 50
+
+// Глобальные массивы
+char  items[MAX_ITEMS][MAX_NAME];
+int   quantities[MAX_ITEMS];
+double prices[MAX_ITEMS];
+int   count = 0;
+
+// Чтение списка из файла
+void readFromFile() {
+    FILE* file = fopen("list.txt", "r");
+    if (!file) {
+        printf("Не удалось открыть файл list.txt для чтения.\n");
+        printf("Файл будет создан при сохранении.\n");
+        printf("Нажмите Enter...");
+        getchar();
+        return;
+    }
+
+    count = 0;
+    while (count < MAX_ITEMS &&
+           fscanf(file, "%49s %d %lf",
+                  items[count],
+                  &quantities[count],
+                  &prices[count]) == 3) {
+        count++;
+    }
+
+    fclose(file);
+    printf("Список успешно загружен. Элементов: %d\n", count);
+    printf("Нажмите Enter...");
+    getchar();
+}
+
+// Запись списка в файл
+void writeToFile() {
+    FILE* file = fopen("list.txt", "w");
+    if (!file) {
+        printf("Ошибка создания файла list.txt!\n");
+        printf("Нажмите Enter...");
+        getchar();
+        return;
+    }
+
+    for (int i = 0; i < count; i++) {
+        fprintf(file, "%s %d %.2f\n",
+                items[i], quantities[i], prices[i]);
+    }
+
+    fclose(file);
+    printf("Список сохранен в list.txt\n");
+    printf("Нажмите Enter...");
+    getchar();
+}
+
+// Добавление покупки
+void addItem() {
+    if (count >= MAX_ITEMS) {
+        printf("Список заполнен (максимум %d позиций).\n", MAX_ITEMS);
+        printf("Нажмите Enter...");
+        getchar();
+        return;
+    }
+
+    printf("Введите название товара (одно слово, до 49 символов): ");
+    scanf("%49s", items[count]);
+
+    printf("Введите количество: ");
+    scanf("%d", &quantities[count]);
+
+    printf("Введите цену за единицу: ");
+    scanf("%lf", &prices[count]);
+
+    count++;
+    printf("Позиция добавлена. Текущее количество: %d\n", count);
+    printf("Нажмите Enter...");
+    getchar(); // съесть '\n' от scanf
+    getchar(); // ожидание Enter
+}
+
+// Показ списка с общей суммой
+void showList() {
+    if (count == 0) {
+        printf("Список пуст.\n");
+        printf("Нажмите Enter...");
+        getchar();
+        return;
+    }
+
+    double total = 0.0;
+
+    printf("\nВаш список покупок:\n");
+    printf("------------------------------------------------------\n");
+    printf("№   Товар                 Кол-во   Цена     Сумма\n");
+    printf("------------------------------------------------------\n");
+
+    for (int i = 0; i < count; i++) {
+        double sum = quantities[i] * prices[i];
+        total += sum;
+        printf("%-3d %-20s %7d %8.2f %8.2f\n",
+               i + 1, items[i], quantities[i], prices[i], sum);
+    }
+
+    printf("------------------------------------------------------\n");
+    printf("Итого к оплате: %.2f\n", total);
+    printf("------------------------------------------------------\n");
+
+    printf("Нажмите Enter...");
+    getchar();
+}
+
+// Сортировка по названию товара (по алфавиту)
+void sortItems() {
+    if (count < 2) {
+        printf("Недостаточно элементов для сортировки.\n");
+        printf("Нажмите Enter...");
+        getchar();
+        return;
+    }
+
+    for (int i = 0; i < count - 1; i++) {
+        for (int j = 0; j < count - i - 1; j++) {
+            if (strcmp(items[j], items[j + 1]) > 0) {
+                // меняем местами названия
+                char tempName[MAX_NAME];
+                strcpy(tempName, items[j]);
+                strcpy(items[j], items[j + 1]);
+                strcpy(items[j + 1], tempName);
+
+                // меняем количества
+                int tempQ = quantities[j];
+                quantities[j] = quantities[j + 1];
+                quantities[j + 1] = tempQ;
+
+                // меняем цены
+                double tempP = prices[j];
+                prices[j] = prices[j + 1];
+                prices[j + 1] = tempP;
+            }
+        }
+    }
+
+    printf("Список отсортирован по названию товара.\n");
+    printf("Нажмите Enter...");
+    getchar();
+}
+
+int main() {
+    int choice;
+
+    // Кодировка для русского текста в консоли Windows
+    system("chcp 1251 > nul");
+
+    do {
+        system("cls");
+        printf("\nМЕНЮ ПРОГРАММЫ \"СПИСОК ПОКУПОК\"\n");
+        printf("1. Загрузить список из файла\n");
+        printf("2. Добавить покупку\n");
+        printf("3. Показать список\n");
+        printf("4. Отсортировать по названию\n");
+        printf("5. Сохранить список в файл\n");
+        printf("6. Выход\n");
+        printf("\nВыберите действие: ");
+
+        if (scanf("%d", &choice) != 1) {
+            // защита от некорректного ввода
+            fflush(stdin);
+            choice = 0;
+        }
+
+        getchar(); // съесть '\n' после числа
+
+        switch (choice) {
+        case 1:
+            readFromFile();
+            break;
+        case 2:
+            addItem();
+            break;
+        case 3:
+            showList();
+            break;
+        case 4:
+            sortItems();
+            break;
+        case 5:
+            writeToFile();
+            break;
+        case 6:
+            printf("До свидания!\n");
+            break;
+        default:
+            printf("Неверный выбор. Нажмите Enter...");
+            getchar();
+        }
+
+    } while (choice != 6);
+
+    return 0;
+}
